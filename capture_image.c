@@ -144,6 +144,12 @@ void convertBnW(volatile short *imagePtr){
     short sum = 0;
     short average;
     // Calculate the average pixel value
+    for (y = 0; y < 240; y++) {
+    	for (x = 0; x < 320; x++) {
+            sum += *(imagePtr + (y << 9) + x); // Add each pixel value to the sum
+        }
+    }
+
     average = sum / (240 * 320);
     // Convert each pixel based on the average and threshold
     for (y = 0; y < 240; y++) {
@@ -165,6 +171,12 @@ void invertPixels(volatile short *imagePtr){
     short sum = 0;
     short average;
     // Calculate the average pixel value
+    for (y = 0; y < 240; y++) {
+    	for (x = 0; x < 320; x++) {
+            sum += *(imagePtr + (y << 9) + x); // Add each pixel value to the sum
+        }
+    }
+
     average = sum / (240 * 320);
     // Convert each pixel based on the average and threshold
     for (y = 0; y < 240; y++) {
