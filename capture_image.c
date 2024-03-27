@@ -20,6 +20,8 @@ void timestamp(volatile short *imagePtr);
 void mirror(volatile short *imagePtr);
 void convertBnW(volatile short *imagePtr);
 void invertPixels(volatile short *imagePtr);
+void vertical_mirror(volatile short *imagePtr);
+void Counter(int countpic);
 
 int main(void)
 {
@@ -29,6 +31,7 @@ int main(void)
 
 	int x, y;
 	int count = 0;
+	int countpic= 0;
 	
 	*(Video_In_DMA_ptr + 3)	= 0x4;				// Enable the video
 	
@@ -39,6 +42,7 @@ int main(void)
 			if (*KEY_ptr != 0)						// check if any KEY was pressed
 			{
 				count++;
+				countpic++;
 				*(Video_In_DMA_ptr + 3) = 0x0;			// Disable the video to capture one frame
 				while (*KEY_ptr != 0);				// wait for pushbutton KEY release
 				break;
@@ -46,20 +50,27 @@ int main(void)
 		}
 
         	if (count == 1) {
-			mirror(Video_Mem_ptr); // first image will be mirrored
-            		
+			vertical_mirror(Video_Mem_ptr);
+			// first image will be mirrored vertically
+            		Counter(countpic);
         	}else if(count == 2) {
-			convertBnW(Video_Mem_ptr); // second image will be turn Black and white
+			mirror(Video_Mem_ptr); // second image will be mirrored horizontal
+			Counter(countpic);
         	}else if (count == 3) {
             		
-			invertPixels(Video_Mem_ptr); // third image will be reverse of Black and White
+			convertBnW(Video_Mem_ptr); // second image will be turn Black and white
+			Counter(countpic);
         	}else if(count == 4){
             		
+			invertPixels(Video_Mem_ptr); // third image will be reverse of Black and White
+			Counter(countpic);
+		}else if(count == 5){
 			timestamp(Video_Mem_ptr); // fourth image will display the time stamp
-
-            }else if(count == 5) { // on fifth button click it will reset the count to do again and get rid of the time stamp 
+			Counter(countpic);
+            	}else if(count == 6) { // on fifth button click it will reset the count to do again and get rid of the time stamp 
 			count = 0;
-    		int offset;
+			Counter(countpic);
+    			int offset;
 			char *text_ptr;
 			text_ptr = "                                                                   "; //used as empty to remove time stamp
     		/* Write the timestamp onto the image */
@@ -120,7 +131,27 @@ void timestamp(volatile short *imagePtr) {
     }
 }
 
+void Counter(int countpic) {
+    		int offsetCount;
+		char *text_ptr;
+		char text_buff[20];
+		sprintf(text_buff, "%d",countpic);
+		text_ptr = text_buff;
+    		/* Write the timestamp onto the image */
+    		offsetCount = (10 << 7) + 70;
+		
+    		while (*(text_ptr)) {
+        		/* Write the character onto the image */
+        		*(char*)(0xC9000000 + offsetCount) = *(text_ptr);
 
+        		/* Move to the next character in the timestamp string */
+        		text_ptr++;
+
+        		/* Move to the next pixel position */
+        		offsetCount++;
+
+		}
+}
 // Flip and mirror function
 void mirror(volatile short *imagePtr) {
     int x, y;
@@ -137,6 +168,23 @@ void mirror(volatile short *imagePtr) {
         }
     }
 }
+
+void vertical_mirror(volatile short *imagePtr) {
+    int x, y;
+    short tempPixel;
+    // Iterate through half of the image vertically
+    for (y = 0; y < 120; y++) {
+        for (x = 0; x < 320; x++) {
+            // Calculate the corresponding pixel on the other half
+            int mirrored_y = 239 - y;
+            // Swap pixels between the two halves
+            tempPixel = *(imagePtr + (y << 9) + x);
+            *(imagePtr + (y << 9) + x) = *(imagePtr + (mirrored_y << 9) + x);
+            *(imagePtr + (mirrored_y << 9) + x) = tempPixel;
+        }
+    }
+}
+
 
 // Black and white image function
 void convertBnW(volatile short *imagePtr){
