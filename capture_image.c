@@ -137,14 +137,14 @@ void Counter(int countpic) {
 		char text_buff[20];
 		sprintf(text_buff, "%d",countpic);
 		text_ptr = text_buff;
-    		/* Write the timestamp onto the image */
+    		/* Write the count onto the image */
     		offsetCount = (10 << 7) + 70;
 		
     		while (*(text_ptr)) {
         		/* Write the character onto the image */
         		*(char*)(0xC9000000 + offsetCount) = *(text_ptr);
 
-        		/* Move to the next character in the timestamp string */
+        		/* Move to the next character in the string */
         		text_ptr++;
 
         		/* Move to the next pixel position */
